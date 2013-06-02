@@ -20,7 +20,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Matrix;
@@ -31,7 +30,6 @@ import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Display;
-import android.view.KeyEvent;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -48,7 +46,7 @@ import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.GestureDetector;
 
 
-public class MainActivity extends Activity implements iRibbonMenuCallback, RibbonMenuCallback {  
+public class MainActivity extends Activity implements iRibbonMenuCallback, RibbonMenuCallback, ButtonCallback {  
 	
 	private final int LEFT_ANIM = 1;
 	private final int RIGHT_ANIM = 2;
@@ -67,6 +65,8 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
     private RibbonMenuView rbmViewWaveform;
 
     private Texttospeech tts;
+    
+    ImageButton statusButton;
     
     @Override
 	public boolean onMenuItemSelected(int featureId, MenuItem item) {
@@ -139,6 +139,7 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
         mDrawingPanel = (DrawingPanel)findViewById(R.id.scopeView);
         mDrawingThread = mDrawingPanel.getThread();  
         mDrawingPanel.registerMenuCallback(this);
+        mDrawingPanel.registerButtonCallback(this);
         
         tts = new Texttospeech(this);
         
@@ -158,6 +159,19 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
             public void onClick(View v) {
             	  // Do something in response to button click
             	ToggleRibbonMenu(LEFT_ANIM);
+            }
+        });
+        
+        statusButton = (ImageButton) findViewById(R.id.status_button);
+        statusButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+            	  // Do something in response to button click
+            	mDrawingPanel.setDisplayUpdating(!mDrawingPanel.getDisplayUpdating());
+        		if(mDrawingPanel.getDisplayUpdating()){
+        			statusButton.setImageResource(R.drawable.pause);
+        		}else{
+        			statusButton.setImageResource(R.drawable.play);
+        		}
             }
         });
     }
@@ -316,29 +330,7 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
 			case R.id.ribbon_menu_triggerfalling:
 				mDrawingPanel.setTriggerType("F");
 				break;
-			case R.id.ribbon_menu_view_saveimage:
-				String vourDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + "ScholaPics";
-				File[] vallFiles ;
-	             File vfolder = new File(vourDir + "/");
-	             vallFiles = vfolder.listFiles();
-	             Log.d("screenCap", "Opening: " + vallFiles[vallFiles.length - 1].getAbsolutePath());
-	             new SingleMediaScanner(this, vallFiles[vallFiles.length - 1]);
-	             break;
-			case R.id.ribbon_menu_exit:
-				Intent intentToResolve = new Intent(Intent.ACTION_MAIN);
-				intentToResolve.addCategory(Intent.CATEGORY_HOME);
-				intentToResolve.setPackage("com.android.launcher");
-				ResolveInfo ri = getPackageManager().resolveActivity(intentToResolve, 0);
-				if (ri != null) 
-				{
-				    Intent intent = new Intent(intentToResolve);
-				    intent.setClassName(ri.activityInfo.applicationInfo.packageName, ri.activityInfo.name);
-				    intent.setAction(Intent.ACTION_MAIN);
-				    intent.addCategory(Intent.CATEGORY_HOME);
-				    startActivity(intent);
-				}
-				finish();
-				break;
+				
 			default:
             	break;
 		}
@@ -410,15 +402,6 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
     	Log.d("CanvasTester", "onSaveInstanceState");
     }
     
-    
-    @Override
-    public void onBackPressed(){
-    	//super.onBackPressed();
-    	Log.d("CanvasTester", "OnBackPressed");
-    }
-    
-    
-    
     //Callback functions to make the ribbon menus accessible from drawing panel
 	@Override
 	public void ToggleRibbonMenu(int direction) {
@@ -473,6 +456,15 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
 	    return true;
 	}   	
 	
+	@Override
+	public void ToggleStatusButton(boolean status) {
+		// TODO Auto-generated method stub
+		if(status){
+			statusButton.setImageResource(R.drawable.pause);
+		}else{
+			statusButton.setImageResource(R.drawable.play);
+		}
+	}
 	
 //Class that scans a directory then opens all of the pictures in that directory
    public class SingleMediaScanner implements MediaScannerConnectionClient {
@@ -502,4 +494,6 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
 
 
 	    }
+
+
 }

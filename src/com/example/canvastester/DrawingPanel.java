@@ -157,6 +157,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 	Context context;
 	
 	Bitmap stoppedImage;
+	Bitmap runningImage;
 	
 	// Enumerations/Arrays for knowing what 'finger one' is touching
 	ScreenItem activeScreenItems = ScreenItem.NONE;
@@ -181,7 +182,8 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		graphshiftyChannel2 = 100; // Default shift in y dimension (volts) for channel 2
 		graphshiftyMath = 300; // Default shift in y dimension (volts) for Math channel
 
-		stoppedImage = BitmapFactory.decodeResource(getResources(), R.drawable.red31176_150);
+		stoppedImage = BitmapFactory.decodeResource(getResources(), R.drawable.play);
+		runningImage = BitmapFactory.decodeResource(getResources(), R.drawable.pause);
 		
 		tts = new Texttospeech(this.context);
 		
@@ -316,7 +318,8 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		graphshiftyChannel2 = 100; // Default shift in y dimension (volts) for channel 2
 		graphshiftyMath = 300; // Default shift in y dimension (volts) for Math channel
 		
-		stoppedImage = BitmapFactory.decodeResource(getResources(), R.drawable.red31176_150);
+		stoppedImage = BitmapFactory.decodeResource(getResources(), R.drawable.play);
+		runningImage = BitmapFactory.decodeResource(getResources(), R.drawable.pause);
 		
 		tts = new Texttospeech(this.context);
 		
@@ -443,6 +446,13 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 	  RibbonMenuCallbackClass = callback;
 	 }
 
+	ButtonCallback ButtonCallbackClass;
+	
+	void registerButtonCallback(ButtonCallback callback) {
+		ButtonCallbackClass = callback;
+	}
+
+
 	//Not sure what this does, i dont think it is necessary any more
 	MainActivity theListener;
 	
@@ -562,8 +572,8 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 	@Override
 	public boolean onDoubleTap(MotionEvent event) {
 		Log.d(DEBUG_TAG, "onDoubleTap: ");
-		//RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
-		//RibbonMenuCallbackClass.ToggleRibbonMenu(RIGHT_ANIM);
+		RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
+		RibbonMenuCallbackClass.ToggleRibbonMenu(RIGHT_ANIM);
 		return true;
 	}
 
@@ -656,22 +666,11 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		generalTextPaint.setTextSize(smallTextPaintSize);
 		channel1TextPaint.setTextSize(largeTextPaintSize);
 		channel2TextPaint.setTextSize(largeTextPaintSize);
+		generalTextPaint.setColor(0xFFFFFF00);
 		channelMathTextPaint.setTextSize(largeTextPaintSize);
 		mGridSize = (int) (y_dim - 2*mBoundary)/8;
 		
 		/** This section creates example waveforms.Comment out when examining live data**/
-	/*	for (i = 0; i < 1200; i++) {
-			channel1Points[i]
-					.set((float) i, (float) ((100) * (Math
-							.sin(((10*i + xlocation) * (.02))))));
-			channel2Points[i].set((float) i,
-					(float) ((50) * (Math.sin(((i) * (.02))))));
-			channelMathPoints[i].set((float) i, (float) (channel2Points[i].y-channel1Points[i].y));
-		}
-		if (displayUpdating) {
-			xlocation = (xlocation + 20) % 1200;// Makes the waves move
-		//End of Waveform generation
-		}*/
 	
 		serviceButtons();
 		serviceEncoders();
@@ -704,13 +703,18 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		canvas.drawLine((float) j - mGridSize, (float) i, (float) (j - mGridSize),
 				(float) (y_dim - i), gridPaint);
 
-		triggerlevel = thread.getTriggerLevel();
+		//triggerlevel = thread.getTriggerLevel();
+		triggerlevel = (float)3.3;
 		//Drawing trigger level
-		if (triggerchannel == "A")
+		if (triggerchannel == "A"){
+			canvas.drawText(formatVolts(triggerlevel), (float) x_dim,
+					(float) y_dim - ((triggerlevel* channel1GraphYScale) + graphshiftyChannel1), generalTextPaint);
 			canvas.drawLine((float) mBoundary, (float) y_dim - ((triggerlevel* channel1GraphYScale) + graphshiftyChannel1), (float) (this.getWidth()-mBoundary), (float) (float) y_dim - (triggerlevel* channel1GraphYScale + graphshiftyChannel1), triggerPaint);
-		else
+		}else{
+			canvas.drawText(formatVolts(triggerlevel), (float) x_dim,
+					(float) y_dim - ((triggerlevel* channel2GraphYScale) + graphshiftyChannel2), generalTextPaint);
 			canvas.drawLine((float) mBoundary, (float) y_dim - (triggerlevel* channel2GraphYScale + graphshiftyChannel2), (float) (this.getWidth()-mBoundary), (float) (float) y_dim - (triggerlevel* channel2GraphYScale + graphshiftyChannel2), triggerPaint);
-
+		}
 		if (channel1Active) {
 			channel1Max = channel1Points[0].y;
 			channel1Min = channel1Points[0].y;
@@ -733,11 +737,8 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 					"CH1: ".concat(formatVolts((mGridSize)/channel1GraphYScale)).concat("/DIV"), (float) mBoundary+(x_dim/5),
 					(float) y_dim - mBoundary-5, generalTextPaint);
 			if (channel1Measurements != 0){
-				canvas.drawText(getMeasurements(1, channel1Measurements), (float) mBoundary,
-						(float) y_dim - mBoundary - 2*(smallTextPaintSize), generalTextPaint);
-				/*canvas.drawText(
-						"CH1 Vpp: ".concat(formatVolts((channel1Max-channel1Min))), (float) mBoundary,
-						(float) y_dim - mBoundary, generalTextPaint);*/
+				canvas.drawText(getMeasurements(1, channel1Measurements), (float) mBoundary+(x_dim/5),
+						(float) y_dim - mBoundary-5 - smallTextPaintSize, generalTextPaint);
 			}
 		}
 
@@ -765,11 +766,8 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 					"CH2: ".concat(formatVolts((mGridSize)/channel2GraphYScale)).concat("/DIV"), (float) mBoundary+2*(x_dim/5),
 					(float) y_dim - mBoundary-5, generalTextPaint);
 			if (channel2Measurements != 0){
-				canvas.drawText(getMeasurements(2, channel2Measurements), (float) mBoundary+(x_dim/4),
-						(float) y_dim - mBoundary - 2*(smallTextPaintSize), generalTextPaint);
-				/*canvas.drawText(
-						"CH2 Vpp: ".concat(formatVolts((channel2Max-channel2Min))), (float) mBoundary+(x_dim/4),
-						(float) y_dim - mBoundary, generalTextPaint);*/
+				canvas.drawText(getMeasurements(2, channel2Measurements), (float) mBoundary+2*(x_dim/5),
+						(float) y_dim - mBoundary-5 - smallTextPaintSize, generalTextPaint);
 			}
 		}
 
@@ -807,15 +805,28 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		
 		generalTextPaint.setTextAlign(Paint.Align.LEFT);
 		if (displayUpdating){
-
+			
+			generalTextPaint.setColor(0xFF66FF33);
+		//	canvas.drawBitmap(runningImage, 0, 0, generalTextPaint);
+	       canvas.drawText(
+					"Running", (float) mBoundary+55,
+					(float) mBoundary+smallTextPaintSize+5, generalTextPaint);	
 		} else {
-	        canvas.drawBitmap(stoppedImage, 0, 0, generalTextPaint);
-	        canvas.drawText(
-					"Stopped", (float) mBoundary+50,
-					(float) mBoundary+smallTextPaintSize, generalTextPaint);	
+			generalTextPaint.setColor(0xFFCC0000);
+		//	canvas.drawBitmap(stoppedImage, 0, 0, generalTextPaint);
+	       canvas.drawText(
+					"Stopped", (float) mBoundary+60,
+					(float) mBoundary+smallTextPaintSize+5, generalTextPaint);	
 
 		}
 			
+		if (!thread.getIsConnected()){
+			canvas.drawText(
+					"Demo", (float) (x_dim - (2* mBoundary))/2,
+					(float) (y_dim - (2* mBoundary))/2, generalTextPaint);	
+		}
+			
+		
 	}
 
 	private void serviceButtons(){
@@ -939,6 +950,15 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 
 	/** This section is for the getter and setters */
 
+	public void setDisplayUpdating(boolean value){
+		thread.displayUpdating = value;
+		displayUpdating = value;
+	}
+	
+	public boolean getDisplayUpdating(){
+		return thread.displayUpdating;
+	}
+	
 	public void setMeasurments(int channel, int measurement){
 		if (channel == 1){ //Channel 1
 			channel1Measurements = measurement;
@@ -1280,6 +1300,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		private float triggerlevel;
 		private boolean displayUpdating;
 		private int samplerate;
+		private boolean isConnected = false;
 		
 		String triggerType;
 		String triggerChannel;
@@ -1340,6 +1361,11 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 			switchActions = JSONinput;
 		}
 		
+		public boolean getIsConnected(){
+			return isConnected;
+		}
+		
+		
 		public void setEncoderActions(int[] encoderInput){
 			encoderActions = encoderInput;
 		}
@@ -1369,13 +1395,15 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		}
 
 		public void send(String data) throws IOException {
-			if (data != null){ //Time to send a message to server
+			if (isConnected){
+				if (data != null){ //Time to send a message to server
 				Log.d("TekScope-ClientThread", "Sending JSON Object");
 				Log.d("TekScope-ClientThread", data);
 				out.write(data.concat("\n"));
 				out.flush();
 			} else {
 				throw new InvalidParameterException();
+			}
 			}
 		}
 
@@ -1397,149 +1425,174 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 				Log.d("TekScope-ClientThread", "C: Connecting...");
 				Socket socket = new Socket(serverAddr, 15151);             
 
+				if (socket != null){
+					isConnected = true;
+				} else {
+					isConnected = false;
+				}
+
+
+
 				String jsonRaw;
 
 				JSONArray channelA = null;
 				JSONArray channelB = null;
 
 				JSONObject switches = null;
-				
+
 				JSONObject encoders = null;
 				int oldencoders[] = new int[8];
 
-				in = new BufferedReader(new InputStreamReader(socket.getInputStream(), Charset.forName("UTF-8")));   
-				out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), Charset.forName("UTF-8")));
-				
-				if (out == null){
-					Log.d("TekScope-ClientThread", "Can not open output!");
-					return;
-				}
-				
-				if (in == null){
-					Log.d("TekScope-ClientThread", "Can not open input!");
-					return;
-				}
-				
-				while (true){    
-					try {
-						//Log.d("TekScope-ClientThread", "C: Sending command.");
+				if (isConnected){
 
-						//while (!(in.ready()))
-						//	Log.d("TekScope-ClientThread", "Not Ready");
+					in = new BufferedReader(new InputStreamReader(socket.getInputStream(), Charset.forName("UTF-8")));   
+					out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), Charset.forName("UTF-8")));
 
-						jsonRaw = in.readLine();
-						//Log.d("TekScope-ClientThread", "Read a Line");
-						//Log.d("TekScope-ClientThread", jsonRaw);
+					if (out == null){
+						Log.d("TekScope-ClientThread", "Can not open output!");
+						return;
+					}
 
-						while ((braceCounter(jsonRaw) > 0) && jsonRaw.charAt(0) == '{'){
-							Log.d("TekScope-ClientThread", "Incomplete JSON Object");
-							while (!(in.ready()));
-							jsonRaw = jsonRaw.concat(in.readLine());
+					if (in == null){
+						Log.d("TekScope-ClientThread", "Can not open input!");
+						return;
+					}
+
+					while (true){    
+						try {
+							//Log.d("TekScope-ClientThread", "C: Sending command.");
+
+							//while (!(in.ready()))
+							//	Log.d("TekScope-ClientThread", "Not Ready");
+
+							jsonRaw = in.readLine();
 							//Log.d("TekScope-ClientThread", "Read a Line");
 							//Log.d("TekScope-ClientThread", jsonRaw);
-						}
 
-						if (braceCounter(jsonRaw) == 0){
-
-							/*This object can contain keys: switch, encoder, sample-rate, trigger-level, trigger-channel, trigger-type, A, and B*/
-							JSONObject jsonIncoming = new JSONObject(jsonRaw);
-
-							channelA = jsonIncoming.optJSONArray("A");
-							channelB = jsonIncoming.optJSONArray("B");
-
-							switches = jsonIncoming.optJSONObject("switch");
-							encoders = jsonIncoming.optJSONObject("encoder");
-
-							int tempint  = jsonIncoming.optInt("sample-rate", -1);
-							if (tempint >= 0 && tempint <= 15){
-								samplerate = tempint;
-								Log.d("TekScope-ClientThread", "Sample Rate: ".concat(String.valueOf(samplerate)));
+							while ((braceCounter(jsonRaw) > 0) && jsonRaw.charAt(0) == '{'){
+								Log.d("TekScope-ClientThread", "Incomplete JSON Object");
+								while (!(in.ready()));
+								jsonRaw = jsonRaw.concat(in.readLine());
+								//Log.d("TekScope-ClientThread", "Read a Line");
+								//Log.d("TekScope-ClientThread", jsonRaw);
 							}
 
+							if (braceCounter(jsonRaw) == 0){
 
-							double tempdouble = jsonIncoming.optDouble("trigger-level");
-							if (!(Double.isNaN(tempdouble))){
-								triggerlevel = (float)tempdouble;
-								Log.d("TekScope-ClientThread", "Trigger Level: ".concat(String.valueOf(triggerlevel)));
-							}
+								/*This object can contain keys: switch, encoder, sample-rate, trigger-level, trigger-channel, trigger-type, A, and B*/
+								JSONObject jsonIncoming = new JSONObject(jsonRaw);
 
-							String temptype = jsonIncoming.optString("trigger-type");
-							if (!(temptype.isEmpty()))
-								Log.d("TekScope-ClientThread", "Trigger Type: ".concat(temptype));
+								channelA = jsonIncoming.optJSONArray("A");
+								channelB = jsonIncoming.optJSONArray("B");
 
-							String tempchannel = jsonIncoming.optString("trigger-channel");
-							if (!(tempchannel.isEmpty()))
-								Log.d("TekScope-ClientThread", "Trigger Channel: ".concat(tempchannel));
+								switches = jsonIncoming.optJSONObject("switch");
+								encoders = jsonIncoming.optJSONObject("encoder");
+
+								int tempint  = jsonIncoming.optInt("sample-rate", -1);
+								if (tempint >= 0 && tempint <= 15){
+									samplerate = tempint;
+									Log.d("TekScope-ClientThread", "Sample Rate: ".concat(String.valueOf(samplerate)));
+								}
 
 
-							if (channelA != null){
-								Log.d("TekScope-ClientThread", "Processing New Channel Data");
-								for (int i = 0; i < channelA.length(); i++){
-									if (displayUpdating) {
-										channel1Points[i].y = (float)channelA.getDouble(i);
-										channel1Points[i].x = i;
-										if (channelB != null){
-											channel2Points[i].y = (float)channelB.getDouble(i);
-											channel2Points[i].x = i;
-										}
-										if (channelA != null && channelB != null){
-											channelMathPoints[i].y = channelMathCalculate(channel1Points[i].y, channel2Points[i].y, mathCalculationType);
-											channelMathPoints[i].x = i;
+								double tempdouble = jsonIncoming.optDouble("trigger-level");
+								if (!(Double.isNaN(tempdouble))){
+									triggerlevel = (float)tempdouble;
+									Log.d("TekScope-ClientThread", "Trigger Level: ".concat(String.valueOf(triggerlevel)));
+								}
+
+								String temptype = jsonIncoming.optString("trigger-type");
+								if (!(temptype.isEmpty()))
+									Log.d("TekScope-ClientThread", "Trigger Type: ".concat(temptype));
+
+								String tempchannel = jsonIncoming.optString("trigger-channel");
+								if (!(tempchannel.isEmpty()))
+									Log.d("TekScope-ClientThread", "Trigger Channel: ".concat(tempchannel));
+
+
+								if (channelA != null){
+									Log.d("TekScope-ClientThread", "Processing New Channel Data");
+									for (int i = 0; i < channelA.length(); i++){
+										if (displayUpdating) {
+											channel1Points[i].y = (float)channelA.getDouble(i);
+											channel1Points[i].x = i;
+											if (channelB != null){
+												channel2Points[i].y = (float)channelB.getDouble(i);
+												channel2Points[i].x = i;
+											}
+											if (channelA != null && channelB != null){
+												channelMathPoints[i].y = channelMathCalculate(channel1Points[i].y, channel2Points[i].y, mathCalculationType);
+												channelMathPoints[i].x = i;
+											}
 										}
 									}
 								}
-							}
-							// Handle Switches
-							if (switches != null){
-								try{
-									String i = switches.getString("id");
+								// Handle Switches
+								if (switches != null){
+									try{
+										String i = switches.getString("id");
 
-									boolean value = switches.getBoolean("value");
-									Log.d("TekScope-ClientThread", "New switch: ".concat(switches.toString()));
-									boolean oldvalue = oldswitches.getJSONObject(i).getBoolean("value");									
-									
-									if (value == true && oldvalue == false)
-										switchActions.put(i,1); //Just pressed
-									else if (value == false && oldvalue == true)
-										switchActions.put(i,2); //Just released
-									else 
-										switchActions.put(i,0); //Stable
+										boolean value = switches.getBoolean("value");
+										Log.d("TekScope-ClientThread", "New switch: ".concat(switches.toString()));
+										boolean oldvalue = oldswitches.getJSONObject(i).getBoolean("value");									
 
-									JSONObject switchtemp = new JSONObject();
-									switchtemp.put("value", value);
-									switchtemp.put("id", i);
-									oldswitches.put(i, switchtemp);
-								} catch (Exception e){
+										if (value == true && oldvalue == false)
+											switchActions.put(i,1); //Just pressed
+										else if (value == false && oldvalue == true)
+											switchActions.put(i,2); //Just released
+										else 
+											switchActions.put(i,0); //Stable
 
+										JSONObject switchtemp = new JSONObject();
+										switchtemp.put("value", value);
+										switchtemp.put("id", i);
+										oldswitches.put(i, switchtemp);
+									} catch (Exception e){
+
+									}
+									//Log.d("TekScope-ClientThread", "switches Object: ".concat(switchActions.toString()));
 								}
-								//Log.d("TekScope-ClientThread", "switches Object: ".concat(switchActions.toString()));
+
+								// Handle Encoders
+								if (encoders != null){
+									int i = encoders.getInt("id");
+									if ((encoders.getInt("value") - oldencoders[i]) > 0)
+										encoderActions[i] = 1; //CW motion
+									else if ((encoders.getInt("value") - oldencoders[i]) < 0)
+										encoderActions[i] = 2; //CCW Motion
+									else 
+										encoderActions[i] = 0; //Stable
+
+									oldencoders[i] = encoders.getInt("value");
+									//Log.d("TekScope-ClientThread", "encoders Object: ".concat(encoders.toString()));
+								}
+
 							}
 
-							// Handle Encoders
-							if (encoders != null){
-								int i = encoders.getInt("id");
-								if ((encoders.getInt("value") - oldencoders[i]) > 0)
-									encoderActions[i] = 1; //CW motion
-								else if ((encoders.getInt("value") - oldencoders[i]) < 0)
-									encoderActions[i] = 2; //CCW Motion
-								else 
-									encoderActions[i] = 0; //Stable
 
-								oldencoders[i] = encoders.getInt("value");
-								//Log.d("TekScope-ClientThread", "encoders Object: ".concat(encoders.toString()));
-							}
 
+						} catch (Exception e) {
+							Log.e("TekScope-ClientThread", "S: Error", e);
+							break;
 						}
-
-
-
-					} catch (Exception e) {
-						Log.e("TekScope-ClientThread", "S: Error", e);
-						break;
+					}
+					socket.close();
+					Log.d("TekScope-ClientThread", "C: Closed.");
+				} else {
+					while(true){
+						wait(100);
+						if (displayUpdating) {
+							for (int i = 0; i < 1200; i++) {
+								channel1Points[i]
+										.set((float) i, (float) ((100) * (Math
+												.sin(((10*i + xlocation) * (.02))))));
+								channel2Points[i].set((float) i,
+										(float) ((50) * (Math.sin(((i) * (.02))))));
+								channelMathPoints[i].set((float) i, (float) (channel2Points[i].y-channel1Points[i].y));
+							}
+						}
 					}
 				}
-				socket.close();
-				Log.d("TekScope-ClientThread", "C: Closed.");
 			} catch (Exception e) {
 				Log.e("TekScope-ClientThread", "C: Error", e);
 			}
@@ -1607,6 +1660,8 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 			return TRGR;
 		}
 	}
+
+
 
 
 }

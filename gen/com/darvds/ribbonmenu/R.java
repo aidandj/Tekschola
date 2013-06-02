@@ -8,11 +8,11 @@ package com.darvds.ribbonmenu;
 
 public final class R {
 	public static final class id {
-		public static final int rbm_item_icon = 0x7f0b0004;
-		public static final int rbm_outside_view = 0x7f0b0007;
-		public static final int rbm_item_text = 0x7f0b0005;
-		public static final int rbm_list_view_right_2 = 0x7f0b0008;
-		public static final int rbm_listview = 0x7f0b0006;
+		public static final int rbm_item_icon = 0x7f0b0005;
+		public static final int rbm_outside_view = 0x7f0b0008;
+		public static final int rbm_item_text = 0x7f0b0006;
+		public static final int rbm_list_view_right_2 = 0x7f0b0009;
+		public static final int rbm_listview = 0x7f0b0007;
 	}
 	public static final class anim {
 		public static final int rbm_out_to_right = 0x7f040003;
@@ -30,7 +30,7 @@ public final class R {
 		public static final int rbm_item = 0x7f030001;
 	}
 	public static final class drawable {
-		public static final int right_arrow = 0x7f020004;
+		public static final int right_arrow = 0x7f020005;
 		public static final int left_arrow = 0x7f020002;
 	}
 	public static final class dimen {

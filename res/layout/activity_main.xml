@@ -17,6 +17,14 @@
         android:layout_height="match_parent"
         android:layout_weight="0.40" />
     
+	    <ImageButton
+        android:id="@+id/status_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:src="@drawable/pause"
+        android:background="@null" />
+	
     <ImageButton
         android:id="@+id/left_arrow_button"
         android:layout_width="wrap_content"
@@ -25,7 +33,7 @@
         android:clickable="true"
         android:src="@drawable/left_arrow"
         android:background="@null" />
-    
+
     
     <com.darvds.ribbonmenu.RibbonMenuView
         android:id="@+id/ribbonMenuView1"
