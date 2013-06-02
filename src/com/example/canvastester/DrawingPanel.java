@@ -572,8 +572,8 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 	@Override
 	public boolean onDoubleTap(MotionEvent event) {
 		Log.d(DEBUG_TAG, "onDoubleTap: ");
-		RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
-		RibbonMenuCallbackClass.ToggleRibbonMenu(RIGHT_ANIM);
+		//RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
+		//RibbonMenuCallbackClass.ToggleRibbonMenu(RIGHT_ANIM);
 		return true;
 	}
 

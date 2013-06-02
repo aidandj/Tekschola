@@ -3,8 +3,13 @@
   xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/ribbon_menu_channel_1" android:title="Channel 1 Menu" android:icon="@drawable/dot" android:onClick="16711680"></item>       
     <item android:id="@+id/ribbon_menu_channel_2" android:title="Channel 2 Menu" android:icon="@drawable/dot" android:onClick="16757760"></item>
-    <item android:id="@+id/ribbon_menu_math_channel" android:title="Math Menu" android:icon="@drawable/dot" android:onClick="4718336"></item><item android:id="@+id/ribbon_menu_trigger" android:title="Trigger Menu" android:icon="@drawable/dot" android:onClick="4718336"></item>
-    <item android:id="@+id/ribbon_menu_autoset" android:title="Autoset" android:icon="@drawable/dot" android:onClick="4718336"></item><item android:id="@+id/ribbon_menu_saveimage" android:title="Save Image" android:icon="@drawable/dot" android:onClick="4718336"></item>
+    <item android:id="@+id/ribbon_menu_math_channel" android:title="Math Menu" android:icon="@drawable/dot" android:onClick="4718336"></item>
+    <item android:id="@+id/ribbon_menu_trigger" android:title="Trigger Menu" android:icon="@drawable/dot" android:onClick="4718336"></item>
+    <item android:id="@+id/ribbon_menu_autoset" android:title="Autoset" android:icon="@drawable/dot" android:onClick="4718336"></item>
+    <item android:id="@+id/ribbon_menu_saveimage" android:title="Save Image" android:icon="@drawable/dot" android:onClick="4718336"></item>
+ <item android:id="@+id/ribbon_menu_view_saveimage" android:title="View Saved Image" android:icon="@drawable/dot" android:onClick="4718336"></item>
+ <item android:id="@+id/ribbon_menu_exit" android:title="Exit (Debugging)" android:icon="@drawable/dot" android:onClick="16711680"></item>    
+
 </menu>
 
 <!-- <color name="rbm_menu_channel_1_color">16711680</color>

@@ -20,6 +20,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Matrix;
@@ -330,8 +331,30 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
 			case R.id.ribbon_menu_triggerfalling:
 				mDrawingPanel.setTriggerType("F");
 				break;
-				
-			default:
+		      case R.id.ribbon_menu_view_saveimage:
+		    	         String vourDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + "ScholaPics";
+		    	          File[] vallFiles ;
+		    	                 File vfolder = new File(vourDir + "/");
+		    	                 vallFiles = vfolder.listFiles();
+		    	                 Log.d("screenCap", "Opening: " + vallFiles[vallFiles.length - 1].getAbsolutePath());
+		    	                 new SingleMediaScanner(this, vallFiles[vallFiles.length - 1]);
+		    	                 break;
+		    	        case R.id.ribbon_menu_exit:
+		    	          Intent intentToResolve = new Intent(Intent.ACTION_MAIN);
+		    	          intentToResolve.addCategory(Intent.CATEGORY_HOME);
+		    	          intentToResolve.setPackage("com.android.launcher");
+		    	          ResolveInfo ri = getPackageManager().resolveActivity(intentToResolve, 0);
+		    	          if (ri != null) 
+		    	          {
+		    	              Intent intent = new Intent(intentToResolve);
+		    	              intent.setClassName(ri.activityInfo.applicationInfo.packageName, ri.activityInfo.name);
+		    	              intent.setAction(Intent.ACTION_MAIN);
+		    	              intent.addCategory(Intent.CATEGORY_HOME);
+		    	              startActivity(intent);
+		    	          }
+		    	          finish();
+		    	          break;	
+		    	        default:
             	break;
 		}
 			
@@ -401,6 +424,12 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
     	super.onSaveInstanceState(savedInstanceState);
     	Log.d("CanvasTester", "onSaveInstanceState");
     }
+    
+       @Override
+        public void onBackPressed(){
+          //super.onBackPressed();
+          Log.d("CanvasTester", "OnBackPressed");
+        }
     
     //Callback functions to make the ribbon menus accessible from drawing panel
 	@Override
