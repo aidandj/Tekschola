@@ -16,6 +16,8 @@ import java.nio.charset.Charset;
 import java.security.InvalidParameterException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.json.JSONArray;
@@ -141,6 +143,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 	/*Holds ints. 0 = no recent changes (return to this after service), negative values mean rotate left (CCW), positive value mean rotate right (CW)*/
 	int encoderActions[] = new int[8];
 
+	Map<String, Boolean> ledStates = new HashMap<String, Boolean>();
 	// We can be in one of these 3 states
 	static final int NONE = 0;
 	static final int DRAG = 1;
@@ -185,6 +188,13 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		stoppedImage = BitmapFactory.decodeResource(getResources(), R.drawable.play);
 		runningImage = BitmapFactory.decodeResource(getResources(), R.drawable.pause);
 		
+		ledStates.put("A", false);
+		ledStates.put("B", false);
+		ledStates.put("C", false);
+		ledStates.put("D", false);
+		ledStates.put("E", false);
+		ledStates.put("P", false);
+		
 		tts = new Texttospeech(this.context);
 		
 		for (int i = 0; i < channel1Points.length; i++) { // Initialize the array of 1200 points to hold the waveforms.
@@ -207,7 +217,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		channel1Paint.setStyle(Paint.Style.STROKE);
 		channel1Paint.setStrokeJoin(Paint.Join.ROUND);
 		channel1Paint.setStrokeCap(Paint.Cap.ROUND);
-		channel1Paint.setStrokeWidth(10);
+		channel1Paint.setStrokeWidth(5);
 
 		/**Paint properties for Channel 2 **/
 		channel2Paint = new Paint();
@@ -216,7 +226,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		channel2Paint.setStyle(Paint.Style.STROKE);
 		channel2Paint.setStrokeJoin(Paint.Join.ROUND);
 		channel2Paint.setStrokeCap(Paint.Cap.ROUND);
-		channel2Paint.setStrokeWidth(10);
+		channel2Paint.setStrokeWidth(5);
 
 		/**Paint properties for Math Channel **/
 		channelMathPaint = new Paint();
@@ -298,7 +308,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		Log.d("DrawingPanel", "Launching TCPIP Thread: " + String.valueOf(cThread.getId()));
 		switchActions = thread.getSwitchActions();
 
-
+		updateLEDs();
 	}
 
 	public DrawingPanel(Context context) {
@@ -320,6 +330,13 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		
 		stoppedImage = BitmapFactory.decodeResource(getResources(), R.drawable.play);
 		runningImage = BitmapFactory.decodeResource(getResources(), R.drawable.pause);
+		
+		ledStates.put("A", false);
+		ledStates.put("B", false);
+		ledStates.put("C", false);
+		ledStates.put("D", false);
+		ledStates.put("E", false);
+		ledStates.put("P", false); 
 		
 		tts = new Texttospeech(this.context);
 		
@@ -343,7 +360,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		channel1Paint.setStyle(Paint.Style.STROKE);
 		channel1Paint.setStrokeJoin(Paint.Join.ROUND);
 		channel1Paint.setStrokeCap(Paint.Cap.ROUND);
-		channel1Paint.setStrokeWidth(10);
+		channel1Paint.setStrokeWidth(5);
 
 		/**Paint properties for Channel 2 **/
 		channel2Paint = new Paint();
