@@ -724,11 +724,11 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		triggerlevel = (float)3.3;
 		//Drawing trigger level
 		if (triggerchannel == "A"){
-			canvas.drawText(formatVolts(triggerlevel), (float) x_dim,
+			canvas.drawText(formatVolts(triggerlevel), (float) x_dim-mBoundary,
 					(float) y_dim - ((triggerlevel* channel1GraphYScale) + graphshiftyChannel1), generalTextPaint);
 			canvas.drawLine((float) mBoundary, (float) y_dim - ((triggerlevel* channel1GraphYScale) + graphshiftyChannel1), (float) (this.getWidth()-mBoundary), (float) (float) y_dim - (triggerlevel* channel1GraphYScale + graphshiftyChannel1), triggerPaint);
 		}else{
-			canvas.drawText(formatVolts(triggerlevel), (float) x_dim,
+			canvas.drawText(formatVolts(triggerlevel), (float) x_dim-mBoundary,
 					(float) y_dim - ((triggerlevel* channel2GraphYScale) + graphshiftyChannel2), generalTextPaint);
 			canvas.drawLine((float) mBoundary, (float) y_dim - (triggerlevel* channel2GraphYScale + graphshiftyChannel2), (float) (this.getWidth()-mBoundary), (float) (float) y_dim - (triggerlevel* channel2GraphYScale + graphshiftyChannel2), triggerPaint);
 		}
@@ -755,7 +755,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 					(float) y_dim - mBoundary-5, generalTextPaint);
 			if (channel1Measurements != 0){
 				canvas.drawText(getMeasurements(1, channel1Measurements), (float) mBoundary+(x_dim/5),
-						(float) y_dim - mBoundary-5 - smallTextPaintSize, generalTextPaint);
+						(float) y_dim - mBoundary-8 - smallTextPaintSize, generalTextPaint);
 			}
 		}
 
@@ -784,7 +784,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 					(float) y_dim - mBoundary-5, generalTextPaint);
 			if (channel2Measurements != 0){
 				canvas.drawText(getMeasurements(2, channel2Measurements), (float) mBoundary+2*(x_dim/5),
-						(float) y_dim - mBoundary-5 - smallTextPaintSize, generalTextPaint);
+						(float) y_dim - mBoundary-8 - smallTextPaintSize, generalTextPaint);
 			}
 		}
 
@@ -806,15 +806,18 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 			channelMathTextPaint.setTextAlign(Paint.Align.RIGHT);
 			generalTextPaint.setColor(0xFF66FF33);
 			generalTextPaint.setTextAlign(Paint.Align.CENTER);
+			
+			canvas.drawText("Math", (float) mBoundary+3*(x_dim/5),
+					(float) y_dim - mBoundary-5, generalTextPaint);
 			if (channelMathMeasurements != 0){
-				canvas.drawText(
-						getMeasurements(3, channelMathMeasurements), (float) mBoundary+3*(x_dim/5),
-						(float) y_dim - mBoundary - 2*(smallTextPaintSize), generalTextPaint);
+				canvas.drawText(getMeasurements(2, channel2Measurements), (float) mBoundary+3*(x_dim/5),
+						(float) y_dim - mBoundary-8 - smallTextPaintSize, generalTextPaint);
 			}
 		}
 
 		samplerate = thread.getSampleRate();
 		
+		generalTextPaint.setColor(0xFFC0C0C0);
 		generalTextPaint.setTextAlign(Paint.Align.CENTER);
 		canvas.drawText(
 				"Time: ".concat(formatTime((float)(mGridSize*((float)Math.pow(2,samplerate)/(float)20000000)/graphscaleX))).concat("/DIV"), (float) mBoundary+4*(x_dim/5),
@@ -1079,6 +1082,45 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 	public DrawingThread getThread() {
 		return _thread;
 	}
+	
+	private void updateLEDs(){
+		    try
+		    {
+		      JSONObject mainObj = new JSONObject();
+		      JSONObject led = new JSONObject();
+		      led.put("id", "A");
+		      led.put("value", ledStates.get("A"));
+		      mainObj.put("led", led);
+		      thread.send(mainObj.toString());
+		      led.put("id", "B");
+		      led.put("value", ledStates.get("B"));
+		      mainObj.put("led", led);
+		      thread.send(mainObj.toString());
+		      led.put("id", "C");
+		      led.put("value", ledStates.get("C"));
+		      mainObj.put("led", led);
+		      thread.send(mainObj.toString());
+		      led.put("id", "D");
+		      led.put("value", ledStates.get("D"));
+		      mainObj.put("led", led);
+		      thread.send(mainObj.toString());
+		      led.put("id", "E");
+		      led.put("value", ledStates.get("E"));
+		      mainObj.put("led", led);
+		      thread.send(mainObj.toString());
+		      led.put("id", "F");
+		      led.put("value", ledStates.get("F"));
+		      mainObj.put("led", led);
+		      thread.send(mainObj.toString());
+		      
+		    }
+		    catch (JSONException ex) {
+		      ex.printStackTrace();
+		    } catch (IOException ex) {
+		      ex.printStackTrace();
+		    }
+		  }
+		  
 
 	public void setChannel1(Context context, boolean mode) {
 		channel1Active = mode;
