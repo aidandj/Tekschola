@@ -1,0 +1,43 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:scaleType="matrix"
+    android:background="@android:color/black"
+    tools:context=".MainActivity" >
+	
+	<com.example.canvastester.DrawingPanel
+        android:id="@+id/scopeView"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_weight="0.40" />
+    
+    <ImageButton
+        android:id="@+id/left_arrow_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:clickable="true"
+        android:src="@drawable/left_arrow"
+        android:background="@null" />
+    
+    
+    <com.darvds.ribbonmenu.RibbonMenuView
+        android:id="@+id/ribbonMenuView1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="right" />
+
+    <com.darvds.ribbonmenu.RibbonMenuView
+        android:id="@+id/ribbonMenuView2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="right" />
+
+    
+</FrameLayout>

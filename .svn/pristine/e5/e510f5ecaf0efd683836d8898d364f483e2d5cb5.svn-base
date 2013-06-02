@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">CanvasTester</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    
+    <string-array name="channel1Coupling_array">
+        <item>Off</item>
+        <item>AC Couple</item>
+        <item>DC Couple</item>
+        <item>GND</item>
+    </string-array>
+    
+    <string-array name="channel2Coupling_array">
+        <item>Off</item>
+        <item>AC Couple</item>
+        <item>DC Couple</item>
+        <item>GND</item>
+    </string-array>
+
+
+</resources>

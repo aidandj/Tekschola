@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+  xmlns:android="http://schemas.android.com/apk/res/android"><item android:id="@+id/ribbon_menu_enablechannel" android:title="Enable Channel 1" android:icon="@drawable/dot" android:onClick="4718336"></item><item android:id="@+id/ribbon_menu_measurements" android:title="Measurements" android:icon="@drawable/dot" android:onClick="4718336"></item><item android:id="@+id/ribbon_menu_measure_off" android:title="Off" android:icon="@null" android:onClick="4718336"></item><item android:id="@+id/ribbon_menu_peak_to_peak" android:title="Peak-to-Peak" android:icon="@null" android:onClick="4718336"></item><item android:id="@+id/ribbon_menu_mean" android:title="Mean" android:icon="@null" android:onClick="4718336"></item><item android:id="@+id/ribbon_menu_max" android:title="Max" android:icon="@null" android:onClick="4718336"></item><item android:id="@+id/ribbon_menu_min" android:title="Min" android:icon="@null" android:onClick="4718336"></item>
+</menu>
+
+<!-- <color name="rbm_menu_channel_1_color">#16711680</color>
+    <color name="rbm_menu_channel_2_color">16757760</color>
+    <color name="rbm_menu_green">4718336</color> -->

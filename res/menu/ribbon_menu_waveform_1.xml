@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/Test1" android:title="Waveform 1" android:icon="@drawable/ic_launcher" android:onClick="16711680"></item>
+    <item android:id="@+id/Test2" android:title="Waveform 1" android:icon="@drawable/ic_launcher" android:onClick="16757760"></item>
+    <item android:id="@+id/Test3" android:title="Waveform 1" android:icon="@drawable/ic_launcher" android:onClick="4718336"></item>
+</menu>
+
+<!-- <color name="rbm_menu_channel_1_color">#16711680</color>
+    <color name="rbm_menu_channel_2_color">16757760</color>
+    <color name="rbm_menu_green">4718336</color> -->

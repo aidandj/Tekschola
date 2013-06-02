@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+  xmlns:android="http://schemas.android.com/apk/res/android"><item android:id="@+id/ribbon_menu_temp" android:title="Temp" android:icon="@drawable/ic_launcher" android:onClick="4718336"></item>
+</menu>
+
+<!-- <color name="rbm_menu_channel_1_color">#16711680</color>
+    <color name="rbm_menu_channel_2_color">16757760</color>
+    <color name="rbm_menu_green">4718336</color> -->

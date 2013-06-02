@@ -1,0 +1,691 @@
+package com.example.canvastester;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.util.StringTokenizer;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.PointF;
+import android.support.v4.view.GestureDetectorCompat;
+import android.util.AttributeSet;
+import android.util.FloatMath;
+import android.util.Log;
+import android.view.Display;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.view.View;
+
+
+public class DrawingPanel extends SurfaceView implements
+SurfaceHolder.Callback, GestureDetector.OnGestureListener,
+GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener {
+
+	private static final String DEBUG_TAG = "Gestures";
+	private GestureDetectorCompat mDetector;
+	private ScaleGestureDetector mScaleDetector;
+
+	private String serverIpAddress = "10.11.12.106";
+	Thread cThread = null;
+
+
+	private DrawingThread _thread;
+	private float xlocation;
+	private int x_dim, y_dim;
+	private int mTextSize;
+	private int mBoundary, mGridSize;
+	private Paint mPaint, nPaint, textPaint, gridPaint, channel1TextPaint, channel2TextPaint;
+	private boolean channel1Active, channel2Active;
+	private float graphscaleX, graphscaleY, graphshiftx, graphshiftyChannel1, graphshiftyChannel2;
+	public PointF[] channel1Points = new PointF[1200];
+	public PointF[] channel2Points = new PointF[1200];
+	private boolean displayUpdating = true;
+	private boolean displayPaused = false;
+
+	private float totalGraphShiftx = 0;
+	private float totalGraphShifty = 0;
+	private float totalGraphScale = 1;
+	float scale = 1;
+
+	// We can be in one of these 3 states
+	static final int NONE = 0;
+	static final int DRAG = 1;
+	static final int ZOOM = 2;
+	int mode = NONE;
+
+	// Remember some things for zooming
+	PointF start = new PointF();
+	PointF mid = new PointF();
+	float oldDist = 1f;
+
+
+	public DrawingPanel(Context context, AttributeSet attr) {
+		super(context, attr);
+		getHolder().addCallback(this);
+		_thread = new DrawingThread(getHolder(), this);
+		xlocation = 0;
+		mTextSize = 15;
+		mBoundary = 10;
+		mGridSize = 50;
+		graphscaleX = 1;
+		graphscaleY = 1;
+		graphshiftx = 0;
+		graphshiftyChannel1 = 100;
+		graphshiftyChannel2 = 500;
+
+		for (int i = 0; i < channel1Points.length; i++) {
+			channel1Points[i] = new PointF();
+			channel2Points[i] = new PointF();
+		}
+
+		mPaint = new Paint();
+		mPaint.setDither(true);
+		mPaint.setColor(0xFF0000FF);
+		mPaint.setStyle(Paint.Style.STROKE);
+		mPaint.setStrokeJoin(Paint.Join.ROUND);
+		mPaint.setStrokeCap(Paint.Cap.ROUND);
+		mPaint.setStrokeWidth(10);
+
+		nPaint = new Paint();
+		nPaint.setDither(true);
+		nPaint.setColor(0xFFFF0000);
+		nPaint.setStyle(Paint.Style.STROKE);
+		nPaint.setStrokeJoin(Paint.Join.ROUND);
+		nPaint.setStrokeCap(Paint.Cap.ROUND);
+		nPaint.setStrokeWidth(10);
+
+		gridPaint = new Paint();
+		gridPaint.setDither(true);
+		gridPaint.setColor(0x7FFFFFFF);
+		gridPaint.setStyle(Paint.Style.STROKE);
+		gridPaint.setStrokeJoin(Paint.Join.ROUND);
+		gridPaint.setStrokeCap(Paint.Cap.ROUND);
+		gridPaint.setStrokeWidth(1);
+
+		textPaint = new Paint();
+		textPaint.setDither(true);
+		textPaint.setColor(0xFFFFFF00);
+		textPaint.setStyle(Paint.Style.STROKE);
+		textPaint.setStrokeJoin(Paint.Join.ROUND);
+		textPaint.setStrokeCap(Paint.Cap.ROUND);
+		textPaint.setStrokeWidth(3);
+		textPaint.setTextSize((float) 50);
+
+
+		channel1TextPaint = new Paint();
+		channel1TextPaint.setDither(true);
+		channel1TextPaint.setColor(0xFF0000FF);
+		channel1TextPaint.setStyle(Paint.Style.STROKE);
+		channel1TextPaint.setStrokeJoin(Paint.Join.ROUND);
+		channel1TextPaint.setStrokeCap(Paint.Cap.ROUND);
+		channel1TextPaint.setStrokeWidth(3);
+		channel1TextPaint.setTextSize((float) 50);
+		
+		channel2TextPaint = new Paint();
+		channel2TextPaint.setDither(true);
+		channel2TextPaint.setColor(0xFFFF0000);
+		channel2TextPaint.setStyle(Paint.Style.STROKE);
+		channel2TextPaint.setStrokeJoin(Paint.Join.ROUND);
+		channel2TextPaint.setStrokeCap(Paint.Cap.ROUND);
+		channel2TextPaint.setStrokeWidth(3);
+		channel2TextPaint.setTextSize((float) 50);
+
+
+
+		// Instantiate the gesture detector with the
+		// application context and an implementation of
+		// GestureDetector.OnGestureListener
+		mDetector = new GestureDetectorCompat(context, this);
+		// Set the gesture detector as the double tap
+		// listener.
+		mDetector.setOnDoubleTapListener(this);
+
+		mScaleDetector = new ScaleGestureDetector(context, this);
+
+		setLongClickable(true);
+
+		cThread = new Thread(new ClientThread());
+		cThread.start();
+		Log.d("TestTCPIP", String.valueOf(cThread.getId()));
+
+
+	}
+
+	public DrawingPanel(Context context) {
+		super(context);
+		getHolder().addCallback(this);
+		_thread = new DrawingThread(getHolder(), this);
+		xlocation = 0;
+		mTextSize = 15;
+		mBoundary = 10;
+		mGridSize = 50;
+		graphscaleX = 1;
+		graphscaleY = 1;
+		graphshiftx = 0;
+		graphshiftyChannel1 = 100;
+		graphshiftyChannel2 = 500;
+
+
+		for (int i = 0; i < channel1Points.length; i++) {
+			channel1Points[i] = new PointF();
+			channel2Points[i] = new PointF();
+		}
+
+		mPaint = new Paint();
+		mPaint.setDither(true);
+		mPaint.setColor(0xFFFFFF00);
+		mPaint.setStyle(Paint.Style.STROKE);
+		mPaint.setStrokeJoin(Paint.Join.ROUND);
+		mPaint.setStrokeCap(Paint.Cap.ROUND);
+		mPaint.setStrokeWidth(10);
+
+		nPaint = new Paint();
+		nPaint.setDither(true);
+		nPaint.setColor(0xFF00FF00);
+		nPaint.setStyle(Paint.Style.STROKE);
+		nPaint.setStrokeJoin(Paint.Join.ROUND);
+		nPaint.setStrokeCap(Paint.Cap.ROUND);
+		nPaint.setStrokeWidth(10);
+
+		gridPaint = new Paint();
+		gridPaint.setDither(true);
+		gridPaint.setColor(0x7FFFFFFF);
+		gridPaint.setStyle(Paint.Style.STROKE);
+		gridPaint.setStrokeJoin(Paint.Join.ROUND);
+		gridPaint.setStrokeCap(Paint.Cap.ROUND);
+		gridPaint.setStrokeWidth(1);
+
+		textPaint = new Paint();
+		textPaint.setDither(true);
+		textPaint.setColor(0x7F0000FF);
+		textPaint.setStyle(Paint.Style.STROKE);
+		textPaint.setStrokeJoin(Paint.Join.ROUND);
+		textPaint.setStrokeCap(Paint.Cap.ROUND);
+		textPaint.setStrokeWidth(3);
+		textPaint.setTextSize((float) 50);
+
+		channel1TextPaint = new Paint();
+		channel1TextPaint.setDither(true);
+		channel1TextPaint.setColor(0xFF0000FF);
+		channel1TextPaint.setStyle(Paint.Style.STROKE);
+		channel1TextPaint.setStrokeJoin(Paint.Join.ROUND);
+		channel1TextPaint.setStrokeCap(Paint.Cap.ROUND);
+		channel1TextPaint.setStrokeWidth(3);
+		channel1TextPaint.setTextSize((float) 50);
+		
+		channel2TextPaint = new Paint();
+		channel2TextPaint.setDither(true);
+		channel2TextPaint.setColor(0xFFFF0000);
+		channel2TextPaint.setStyle(Paint.Style.STROKE);
+		channel2TextPaint.setStrokeJoin(Paint.Join.ROUND);
+		channel2TextPaint.setStrokeCap(Paint.Cap.ROUND);
+		channel2TextPaint.setStrokeWidth(3);
+		channel2TextPaint.setTextSize((float) 50);
+
+		// Instantiate the gesture detector with the
+		// application context and an implementation of
+		// GestureDetector.OnGestureListener
+		mDetector = new GestureDetectorCompat(context, this);
+		// Set the gesture detector as the double tap
+		// listener.
+		mDetector.setOnDoubleTapListener(this);
+
+		mScaleDetector = new ScaleGestureDetector(context, this);
+
+		setLongClickable(true);
+
+		cThread = new Thread(new ClientThread());
+		cThread.start();
+		Log.d("TestTCPIP", String.valueOf(cThread.getId()));
+
+	}
+
+
+	/** This section is for the overrides for the gesture listener */
+
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		mScaleDetector.onTouchEvent(event);
+		this.mDetector.onTouchEvent(event);
+		// Be sure to call the superclass implementation
+		return super.onTouchEvent(event);
+	}
+
+	@Override
+	public boolean onDown(MotionEvent event) {
+		Log.d(DEBUG_TAG, "onDown: " );
+		displayUpdating = false;
+		return true;
+	}
+
+	@Override
+	public boolean onFling(MotionEvent event1, MotionEvent event2,
+			float velocityX, float velocityY) {
+		Log.d(DEBUG_TAG, "onFling: ");
+		return true;
+	}
+
+	@Override
+	public void onLongPress(MotionEvent event) {
+		int surfWidth = this.getWidth(); 
+		int surfHeight = this.getHeight(); 
+		int surfX = this.getLeft(); 
+		int surfY = this.getTop();
+
+		Log.d(DEBUG_TAG, "onLongPress: " + event.getX() + ", " + event.getY());
+		for (int i = 0; i < this.channel1Points.length ; i++){ //
+			//Log.d(DEBUG_TAG, "XY: " + (int)(event.getX()) + ", " + (int)(event.getY()) +" current Channel1 XY: " + (int)((((this.channel1Points[i].x*graphscaleX)+graphshiftx))) + "," + (int)(((this.channel1Points[i].y+graphshiftyChannel1))) ); 
+			if ((int)((event.getX())/30) == (int)((((this.channel1Points[i].x*graphscaleX)+graphshiftx))/30)){ //channel1Points[i].x * graphscaleX + graphshiftx
+				//Log.d(DEBUG_TAG, "Channel 1 X Match");
+				if ((int)((event.getY())/30) == (int)((this.channel1Points[i].y+graphshiftyChannel1)/30)){ 
+					Log.d(DEBUG_TAG, "Channel 1 Touch"); 
+					channel1Active = false;
+					break;
+				}
+			}
+
+		}
+		for (int i = 0; i < this.channel2Points.length ; i++){ //
+			//Log.d(DEBUG_TAG, "XY: " + (int)(event.getX()) + ", " + (int)(event.getY()) +" current Channel2 XY: " + (int)((((this.channel2Points[i].x*graphscaleX)+graphshiftx))) + "," + (int)(((this.channel2Points[i].y+graphshiftyChannel2))) ); 
+			if ((int)((event.getX())/30) == (int)((((this.channel2Points[i].x*graphscaleX)+graphshiftx))/30)){ //channel1Points[i].x * graphscaleX + graphshiftx
+				//Log.d(DEBUG_TAG, "Channel 1 X Match");
+				if ((int)((event.getY())/30) == (int)((this.channel2Points[i].y+graphshiftyChannel2)/30)){ 
+					Log.d(DEBUG_TAG, "Channel 2 Touch"); 
+					channel2Active = false;
+					break;
+				}
+			}
+
+		}
+	}
+
+	@Override
+	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
+			float distanceY) {
+		Log.d(DEBUG_TAG, "onScroll: ");
+		graphshiftx = -distanceX + graphshiftx;
+		graphshiftyChannel1 = -distanceY + graphshiftyChannel1;
+		return true;
+	}
+
+	@Override
+	public void onShowPress(MotionEvent event) {
+		Log.d(DEBUG_TAG, "onShowPress: " );
+	}
+
+	@Override
+	public boolean onSingleTapUp(MotionEvent event) {
+		Log.d(DEBUG_TAG, "onSingleTapUp: ");
+		if (displayPaused){
+			displayUpdating = false;
+			displayPaused = false;
+		}
+		else{
+			displayUpdating = true;
+			displayPaused = true;
+		}
+		return true;
+	}
+
+	@Override
+	public boolean onDoubleTap(MotionEvent event) {
+		Log.d(DEBUG_TAG, "onDoubleTap: ");
+		return true;
+	}
+
+	@Override
+	public boolean onDoubleTapEvent(MotionEvent event) {
+		Log.d(DEBUG_TAG, "onDoubleTapEvent: ");
+		return true;
+	}
+
+	@Override
+	public boolean onSingleTapConfirmed(MotionEvent event) {
+		Log.d(DEBUG_TAG, "onSingleTapConfirmed: " );
+		return true;
+	}
+
+
+	/** This section is for the overrides for the SurfaceView */
+
+	@Override
+	public void onDraw(Canvas canvas) {
+		int i = 0;
+		int j = 0;
+		x_dim = 1000;//this.getWidth();
+		y_dim = this.getHeight();
+		textPaint.setTextSize((float) (y_dim / mTextSize));
+		channel1TextPaint.setTextSize((float) (y_dim / mTextSize));
+		channel2TextPaint.setTextSize((float) (y_dim / mTextSize));
+
+		canvas.drawColor(Color.BLACK);
+		j = (x_dim % mGridSize) / 2;
+		for (i = (y_dim % mGridSize) / 2; i < y_dim; i = i + mGridSize) {
+			canvas.drawLine((float) j, (float) i, (float) (x_dim - j),
+					(float) i, gridPaint);
+		}
+		i = (y_dim % mGridSize) / 2;
+		for (j = (x_dim % mGridSize) / 2; j < x_dim; j = j + mGridSize) {
+			canvas.drawLine((float) j, (float) i, (float) (j),
+					(float) (y_dim - i), gridPaint);
+		}
+
+
+		/*	for (i = 0; i < 1200; i++) {
+				channel1Points[i]
+						.set((float) i, (float) ((100) * (Math
+								.sin(((i + xlocation) * (.02))))));
+				channel2Points[i].set((float) i,
+						(float) ((50) * (Math.sin(((i) * (.02))))));
+			}
+		 */
+		if (channel1Active) {
+			for (i = 0; i < (x_dim - 1); i++) {
+				canvas.drawLine(channel1Points[i].x * graphscaleX
+						+ graphshiftx, channel1Points[i].y * graphscaleY + graphshiftyChannel1,
+						channel1Points[i + 1].x * graphscaleX + graphshiftx,
+						channel1Points[i + 1].y * graphscaleY + graphshiftyChannel1, mPaint);
+			}
+			channel1TextPaint.setTextAlign(Paint.Align.RIGHT);
+			canvas.drawText("CH1", (float) (x_dim - mBoundary), (float) 80,
+					channel1TextPaint);
+		}
+
+		if (channel2Active) {
+			for (i = 0; i < x_dim - 1; i++) {
+				canvas.drawLine(channel2Points[i].x * graphscaleX
+						+ graphshiftx, channel2Points[i].y + graphshiftyChannel2,
+						channel2Points[i + 1].x * graphscaleX + graphshiftx,
+						channel2Points[i + 1].y + graphshiftyChannel2, nPaint);
+			}
+			channel2TextPaint.setTextAlign(Paint.Align.RIGHT);
+			canvas.drawText("CH2", (float) (x_dim - mBoundary),
+					(float) 120, channel2TextPaint);
+		}
+		if (displayUpdating) {
+			xlocation = (xlocation + 20) % 1000;// Makes the waves move
+
+			canvas.drawText(
+					String.valueOf(x_dim).concat(" x ")
+					.concat(String.valueOf(y_dim)), (float) mBoundary,
+					(float) y_dim - mBoundary, textPaint);
+		}
+
+	}
+
+	public void surfaceChanged(SurfaceHolder holder, int format, int width,
+			int height) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void surfaceCreated(SurfaceHolder holder) {
+		// TODO Auto-generated method stub
+		_thread.setRunning(true);
+		_thread.start();
+	}
+
+	public void surfaceDestroyed(SurfaceHolder holder) {
+		// TODO Auto-generated method stub
+		boolean retry = true;
+		_thread.setRunning(false);
+		while (retry) {
+			try {
+				_thread.join();
+				retry = false;
+			} catch (InterruptedException e) {
+				// we will try it again and again...
+			}
+		}
+	}
+
+
+
+	/** This section is for the getter and setters */
+
+	public void setGraphScaleY(float scale) {
+		graphscaleY= scale;
+	}
+
+	public void setGraphScaleX(float scale) {
+		graphscaleX= scale;
+	}
+
+	public void setGraphShiftChannel1(float x, float y) {
+		graphshiftx = x;
+		graphshiftyChannel1 = y;
+	}
+
+	public void setGraphShiftChannel2(float x, float y) {
+		graphshiftx = x;
+		graphshiftyChannel2 = y;
+	}
+
+	public DrawingThread getThread() {
+		return _thread;
+	}
+
+	public void setChannel1(boolean mode) {
+		channel1Active = mode;
+	}
+
+	public boolean getChannel1() {
+		return channel1Active;
+	}
+
+	public boolean getChannel2() {
+		return channel2Active;
+	}
+
+	public void setChannel2(boolean mode) {
+		channel2Active = mode;
+	}
+
+
+	/** This section is for the overrides for the ScaleListener */
+
+	@Override
+	public boolean onScale(ScaleGestureDetector detector) {
+		// TODO Auto-generated method stub
+		Log.d("Scaling", "Scaling: " + graphscaleY);
+		if (detector.getCurrentSpanX()*2 < detector.getCurrentSpanY()) // Y bigger than X
+			graphscaleY *= detector.getScaleFactor();
+		else if (detector.getCurrentSpanY()*2 < detector.getCurrentSpanX()) // X bigger than Y
+			graphscaleX *= detector.getScaleFactor();
+		else {
+			graphscaleY *= detector.getScaleFactor();
+			graphscaleX *= detector.getScaleFactor();
+		}
+
+		// Don't let the object get too small or too large.
+		graphscaleY = Math.max(0.1f, Math.min(graphscaleY, 5.0f));
+		graphscaleX = Math.max(0.1f, Math.min(graphscaleX, 5.0f));
+
+		return true;
+	}
+
+	@Override
+	public boolean onScaleBegin(ScaleGestureDetector detector) {
+		// TODO Auto-generated method stub
+		Log.d("Scaling", "Beginning Scale: " + graphscaleY);
+
+		return true;
+	}
+
+	@Override
+	public void onScaleEnd(ScaleGestureDetector detector) {
+		// TODO Auto-generated method stub
+		Log.d("Scaling", "Ending Scale: " + graphscaleY);
+
+	}
+
+
+	/** This section deals with the network connection **/
+
+	public class ClientThread implements Runnable {
+
+		public void run() {
+			try {
+				InetAddress serverAddr = InetAddress.getByName(serverIpAddress);
+				Log.d("TestTCPIP", "C: Connecting...");
+				Socket socket = new Socket(serverAddr, 15151);             
+				while (true){    
+					try {
+						Log.d("TestTCPIP", "C: Sending command.");
+						BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));   
+						
+						String channel1 = null;
+						String channel2 = null;
+
+				
+							while (!(in.ready()));
+							channel1 = in.readLine();
+
+							while ((channel1 == null) || (channel1.equalsIgnoreCase("")))
+								channel1 = in.readLine();
+				
+						
+							StringTokenizer Tok = new StringTokenizer(channel1, ",");
+							
+							int i = 0;
+							while (Tok.hasMoreElements()){
+								channel1Points[i].y = Float.valueOf(String.valueOf(Tok.nextElement()));
+								channel1Points[i].x = i++;
+								
+							}
+							
+							Log.d("DrawingPanel-Data", "Got " + String.valueOf(i) + " ints for Channel 1 from server");
+														
+							while (!(in.ready()));
+							channel2 = in.readLine();
+
+							while ((channel2 == null) || (channel2.equalsIgnoreCase("")))
+								channel2 = in.readLine();
+				
+							Tok = new StringTokenizer(channel2, ",");
+							
+							i = 0;
+							while (Tok.hasMoreElements()){
+//								Log.d("FLOATING", String.valueOf(Tok.nextElement()));
+								channel2Points[i].y = Float.valueOf(String.valueOf(Tok.nextElement()));
+								channel2Points[i].x = i++;
+								
+							}
+						
+						/*for (int i = 0; i < 1200; i++){
+							channel1Points[i].y = this.getFloat(in);
+							channel1Points[i].x = i;
+							channel2Points[i].y = this.getFloat(in);
+							channel2Points[i].x = i;	
+						}*/
+						
+					} catch (Exception e) {
+						Log.e("TestTCPIP", "S: Error", e);
+						break;
+					}
+				}
+				socket.close();
+				Log.d("TestTCPIP", "C: Closed.");
+			} catch (Exception e) {
+				Log.e("TestTCPIP", "C: Error", e);
+			}
+		}
+
+		private float getFloat(BufferedReader in){
+			String temp = null;
+
+			try {
+				while (!(in.ready()));
+				temp = in.readLine();
+
+				while ((temp == null) || (temp.equalsIgnoreCase("")))
+					temp = in.readLine();
+			} catch (Exception e) {
+			}
+
+			return Float.valueOf(temp);
+		}
+
+	}
+
+}
+
+/*
+@Override 
+public boolean onTouchEvent(MotionEvent event) {
+
+
+	int surfWidth = this.getWidth(); 
+	int surfHeight = this.getHeight(); 
+	int surfX = this.getLeft(); 
+	int surfY = this.getTop();
+
+	// Handle touch events here... 
+	switch (event.getAction() & MotionEvent.ACTION_MASK) { 
+	case MotionEvent.ACTION_DOWN:
+		start.set(event.getX(), event.getY()); 
+		Log.w(this.getClass().getName(), "mode=DRAG"); mode = DRAG;
+
+		for (int i = 0; i < this.channel1Points.length ; i++){ //
+			Log.w(this.getClass().getName(), "XY: " + (int)((event.getX()-surfX)/30)
+					+ ", " + (int)((event.getY()-surfY-50)/30) +" current Channel1 XY: " + (int)((this.channel1Points[i].x)/30) + "," + (int)((this.channel1Points[i].y)/30) ); 
+			if ((int)((event.getX()-surfX)/30) == (int)((this.channel1Points[i].x)/30)){ 
+				if ((int)((event.getY()-surfY-50)/30) == (int)((this.channel1Points[i].y)/30)){ 
+					Log.w(this.getClass().getName(), "Channel 1 Touch"); }
+			}
+
+		}
+
+		break; 
+	case MotionEvent.ACTION_POINTER_DOWN: 
+		oldDist = spacing(event);
+		Log.w(this.getClass().getName(), "oldDist=" + oldDist); if (oldDist > 10f) { //midPoint(mid, event); mode = ZOOM;
+			Log.w(this.getClass().getName(), "mode=ZOOM"); 
+		} 
+		return false; 
+		//break;
+	case MotionEvent.ACTION_UP: 
+		if (mode == DRAG){ 
+			totalGraphShiftx = (event.getX() - start.x)+totalGraphShiftx; 
+			totalGraphShifty = (event.getY() - start.y)+totalGraphShifty; 
+		} 
+	case MotionEvent.ACTION_POINTER_UP: 
+		if (mode == ZOOM){ 
+			Log.w(this.getClass().getName(), "Storing Scale"); 
+			totalGraphScale = scale;
+			Log.w(this.getClass().getName(), "totalGraphScale= " + totalGraphScale); } mode = NONE;
+
+			Log.w(this.getClass().getName(), "mode=NONE"); 
+			break; 
+	case MotionEvent.ACTION_MOVE: 
+		if (event.getEdgeFlags()==MotionEvent.EDGE_LEFT){
+			Log.w(this.getClass().getName(), "Left Edge (Lauch Menu)");
+			break; 
+		} 
+		if (mode == DRAG) { // ... 
+			this.setGraphShift((event.getX() - start.x)+totalGraphShiftx, (event.getY() - start.y)+totalGraphShifty); }
+		else if (mode == ZOOM) { 
+			float newDist = spacing(event);
+			Log.w(this.getClass().getName(), "newDist=" + newDist); 
+			if (newDist > 10f) { 
+				scale = newDist / oldDist;
+				this.setGraphScale(scale*totalGraphScale);
+				Log.w(this.getClass().getName(), "Scale= " + scale);
+				Log.w(this.getClass().getName(), "totalGraphScale= " + totalGraphScale);
+			} 
+		} 
+		break; 
+	} 
+	return super.onTouchEvent(event);
+}
+ */
