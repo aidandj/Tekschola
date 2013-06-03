@@ -78,8 +78,8 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 	private GestureDetectorCompat mDetector;
 	private ScaleGestureDetector mScaleDetector;
 
-//	private String serverIpAddress = "10.0.1.9";
-	private String serverIpAddress = "192.168.0.2";
+	private String serverIpAddress = "10.0.1.9";
+//	private String serverIpAddress = "192.168.0.2";
 	Thread cThread = null;
 
 

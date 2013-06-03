@@ -352,7 +352,7 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
 		    	              intent.addCategory(Intent.CATEGORY_HOME);
 		    	              startActivity(intent);
 		    	          }
-		    	          finish();
+		    	          System.exit(0);
 		    	          break;	
 		    	        default:
             	break;
@@ -433,15 +433,20 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
     
     //Callback functions to make the ribbon menus accessible from drawing panel
 	@Override
-	public void ToggleRibbonMenu(int direction) {
+	public void ToggleRibbonMenu(final int direction) {
 		// TODO Auto-generated method stub
 		Log.d("DrawingPanel", "ToggleRibbonMenu " + direction);
 		//rbmView.setMenuItems(R.menu.ribbon_menu, LEFT_ANIM);  
         //rbmView.setMenuItems(R.menu.ribbon_menu_right_blank, RIGHT_ANIM);	
-		rbmView.toggleMenu(direction);
+		runOnUiThread(new Runnable() {
+
+	        public void run() {
+	            rbmView.toggleMenu(direction);
+	        }
+	    });
 	}    
 
-	public void ToggleRibbonMenu(int direction, int channel) {
+	public void ToggleRibbonMenu(final int direction, int channel) {
 		// TODO Auto-generated method stub
 		rbmView.setMenuItems(R.menu.ribbon_menu, LEFT_ANIM);  
         if (channel == CHANNEL_1)
@@ -454,7 +459,12 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
         	rbmView.setMenuItems(R.menu.ribbon_menu_right_trigger, RIGHT_ANIM);	
         else
         	rbmView.setMenuItems(R.menu.ribbon_menu_right_blank, RIGHT_ANIM);	
-		rbmView.toggleMenu(direction);
+		runOnUiThread(new Runnable() {
+
+	        public void run() {
+	            rbmView.toggleMenu(direction);
+	        }
+	    });
 	} 
 	
 	@Override
