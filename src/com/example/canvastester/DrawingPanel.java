@@ -484,9 +484,6 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		mScaleDetector.onTouchEvent(event);
 		this.mDetector.onTouchEvent(event);
 		// Be sure to call the superclass implementation
-		
-		
-		
 		return super.onTouchEvent(event);
 	}
 
@@ -495,6 +492,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		Log.d(DEBUG_TAG, "onDown: " );
 		displayUpdating = false;
 		thread.setDisplayUpdating(false);
+		ButtonCallbackClass.ToggleStatusButton(false);
 		return true;
 	}
 
@@ -573,6 +571,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		displayUpdating = true;
 		displayPaused = true;
 		thread.setDisplayUpdating(true);
+		ButtonCallbackClass.ToggleStatusButton(true);
 		/*if (displayPaused){
 			displayUpdating = false;
 			displayPaused = false;
@@ -589,7 +588,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 	@Override
 	public boolean onDoubleTap(MotionEvent event) {
 		Log.d(DEBUG_TAG, "onDoubleTap: ");
-		//RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
+		RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
 		//RibbonMenuCallbackClass.ToggleRibbonMenu(RIGHT_ANIM);
 		return true;
 	}
@@ -723,6 +722,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		//triggerlevel = thread.getTriggerLevel();
 		triggerlevel = (float)3.3;
 		//Drawing trigger level
+		generalTextPaint.setTextAlign(Paint.Align.RIGHT);
 		if (triggerchannel == "A"){
 			canvas.drawText(formatVolts(triggerlevel), (float) x_dim-mBoundary,
 					(float) y_dim - ((triggerlevel* channel1GraphYScale) + graphshiftyChannel1), generalTextPaint);
@@ -850,6 +850,11 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 	}
 
 	private void serviceButtons(){
+		final int CHANNEL_1 = 1;
+		final int CHANNEL_2 = 2;	
+		final int MATH = 3;	
+		final int TRIGGER = 4;
+		
 		try{
 			switchActions = thread.getSwitchActions();
 		if (switchActions.getInt("A") == 1){
@@ -858,9 +863,39 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		} else if (switchActions.getInt("B") == 1){
 			setChannel2(null, !(getChannel2()));
 			switchActions.put("B", 0);
-		}  else if (switchActions.getInt("C") == 1){
+		} else if (switchActions.getInt("C") == 1){
 			setChannelMath(null, !(getChannelMath()));
 			switchActions.put("C", 0);
+		}  else if (switchActions.getInt("D") == 1){
+//			RibbonMenuCallbackClass.ToggleRibbonMenu(RIGHT_ANIM, TRIGGER);
+			switchActions.put("D", 0);
+			Log.d("DrawingPanel", "Recvd D");
+		}  else if (switchActions.getInt("E") == 1){
+			setChannelMath(null, !(getChannelMath()));
+			switchActions.put("E", 0);
+			Log.d("DrawingPanel", "Recvd E");
+		}  else if (switchActions.getInt("F") == 1){
+			Log.d("DrawingPanel", "Recvd F");
+			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
+			switchActions.put("F", 0);
+		} else if (switchActions.getInt("G") == 1){
+			Log.d("DrawingPanel", "Recvd G");
+			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
+			switchActions.put("G", 0);
+		} else if (switchActions.getInt("H") == 1){
+			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
+			switchActions.put("H", 0);
+		} else if (switchActions.getInt("I") == 1){
+			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
+			switchActions.put("I", 0);
+		}  else if (switchActions.getInt("J") == 1){
+			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
+			switchActions.put("J", 0);
+		} else if (switchActions.getInt("P") == 1){
+			Log.d("DrawingPanel", "Recvd P");
+			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
+			switchActions.put("P", 0);
+			updateLEDs();
 		}
 		thread.setSwitchActions(switchActions);
 		} catch (Exception e) {
@@ -1092,6 +1127,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		      led.put("value", ledStates.get("A"));
 		      mainObj.put("led", led);
 		      thread.send(mainObj.toString());
+		      Log.d("DrawingPanel", mainObj.toString());
 		      led.put("id", "B");
 		      led.put("value", ledStates.get("B"));
 		      mainObj.put("led", led);
@@ -1108,8 +1144,8 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		      led.put("value", ledStates.get("E"));
 		      mainObj.put("led", led);
 		      thread.send(mainObj.toString());
-		      led.put("id", "F");
-		      led.put("value", ledStates.get("F"));
+		      led.put("id", "P");
+		      led.put("value", ledStates.get("P"));
 		      mainObj.put("led", led);
 		      thread.send(mainObj.toString());
 		      

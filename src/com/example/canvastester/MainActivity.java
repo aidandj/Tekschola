@@ -326,7 +326,6 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
 				
 			case R.id.ribbon_menu_triggerrising:
 				mDrawingPanel.setTriggerType("F");
-				rbmView.setMenuItems(R.menu.ribbon_menu, RIGHT_ANIM);  
 				break;
 				
 			case R.id.ribbon_menu_triggerfalling:
@@ -436,8 +435,9 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
 	@Override
 	public void ToggleRibbonMenu(int direction) {
 		// TODO Auto-generated method stub
-		rbmView.setMenuItems(R.menu.ribbon_menu, LEFT_ANIM);  
-        rbmView.setMenuItems(R.menu.ribbon_menu_right_blank, RIGHT_ANIM);	
+		Log.d("DrawingPanel", "ToggleRibbonMenu " + direction);
+		//rbmView.setMenuItems(R.menu.ribbon_menu, LEFT_ANIM);  
+        //rbmView.setMenuItems(R.menu.ribbon_menu_right_blank, RIGHT_ANIM);	
 		rbmView.toggleMenu(direction);
 	}    
 
