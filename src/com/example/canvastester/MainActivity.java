@@ -326,6 +326,7 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
 				
 			case R.id.ribbon_menu_triggerrising:
 				mDrawingPanel.setTriggerType("F");
+				rbmView.setMenuItems(R.menu.ribbon_menu, RIGHT_ANIM);  
 				break;
 				
 			case R.id.ribbon_menu_triggerfalling:
