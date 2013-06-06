@@ -5,16 +5,7 @@ import java.util.Locale;
 import android.app.Activity;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
-import java.util.Locale;
-
-import android.app.Activity;
 import android.content.Context;
-import android.os.Bundle;
-import android.speech.tts.TextToSpeech;
-import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 
 public class Texttospeech extends Activity implements TextToSpeech.OnInitListener{
 
@@ -45,9 +36,9 @@ public class Texttospeech extends Activity implements TextToSpeech.OnInitListene
 			tts_ready = true;
 			int result = tts.setLanguage(Locale.US);
 
-			tts.setPitch((float) .7); // set pitch level
+			tts.setPitch((float) 1); // set pitch level
 
-			 tts.setSpeechRate((float) 1); // set speech speed rate			
+			 tts.setSpeechRate((float) 1.25); // set speech speed rate			
 			 if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
 					Log.e("TTS", "Language is not supported");
 				}	
