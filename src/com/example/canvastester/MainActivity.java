@@ -42,6 +42,7 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.PopupMenu;
+import android.widget.Toast;
 import android.support.v4.view.GestureDetectorCompat;
 import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.GestureDetector;
@@ -55,15 +56,16 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
 	private final int CHANNEL_2 = 2;	
 	private final int MATH = 3;	
 	private final int TRIGGER = 4;	
-	private final int WAVEFORM = 2;
+	private final int MAIN = 5;
 	
 	private int menutype = CHANNEL_1;
 	
 	private static final String DEBUG_TAG = "Gestures";
     private GestureDetectorCompat mDetector; 
 	
+    
+    //Initialize Ribbon Menu
     private RibbonMenuView rbmView;
-    private RibbonMenuView rbmViewWaveform;
 
     private Texttospeech tts;
     
@@ -80,7 +82,7 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
 		// TODO Auto-generated method stub
 		return super.onOptionsItemSelected(item);
 	}
-
+	//Register canvas for long press
 	@Override
 	public void openContextMenu(View view) {
 		// TODO Auto-generated method stub
@@ -123,19 +125,13 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
         
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-        
-/*        rbmViewWaveform = (RibbonMenuView) findViewById(R.id.ribbonMenuView2);
-        rbmViewWaveform.setMenuClickCallback(this);
-        rbmViewWaveform.setMenuItems(R.menu.ribbon_menu_waveform_2, RIGHT_ANIM);  
-        rbmViewWaveform.setMenuItems(R.menu.ribbon_menu_waveform_1, LEFT_ANIM);
- */       
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);    
         
         //Creates a ribbon menu and sets left and right menus
         rbmView = (RibbonMenuView) findViewById(R.id.ribbonMenuView1);
         rbmView.setMenuClickCallback(this);
         rbmView.setMenuItems(R.menu.ribbon_menu, LEFT_ANIM);  
-        rbmView.setMenuItems(R.menu.ribbon_menu_right_blank, RIGHT_ANIM);
+        rbmView.setMenuItems(R.menu.ribbon_menu_right_trigger, RIGHT_ANIM);
 
         mDrawingPanel = (DrawingPanel)findViewById(R.id.scopeView);
         mDrawingThread = mDrawingPanel.getThread();  
@@ -159,16 +155,18 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
         buttonMenu.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
             	  // Do something in response to button click
-            	ToggleRibbonMenu(LEFT_ANIM);
+            	ToggleRibbonMenu(LEFT_ANIM, MAIN);
             }
         });
         
+        //Play pause button that changes images
         statusButton = (ImageButton) findViewById(R.id.status_button);
         statusButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
             	  // Do something in response to button click
             	mDrawingPanel.setDisplayUpdating(!mDrawingPanel.getDisplayUpdating());
-        		if(mDrawingPanel.getDisplayUpdating()){
+        		//change image depending on state
+            	if(mDrawingPanel.getDisplayUpdating()){
         			statusButton.setImageResource(R.drawable.pause);
         		}else{
         			statusButton.setImageResource(R.drawable.play);
@@ -178,13 +176,12 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
     }
    
     //Function to intercept button calls. Case statement determines which button is pressed
-    
 	@Override
 	public void RibbonMenuItemClick(int itemId) {
 		Context context = getApplicationContext();
 		switch (itemId) {
 			case R.id.ribbon_menu_channel_1:
-				ToggleRibbonMenu(LEFT_ANIM);
+				ToggleRibbonMenu(LEFT_ANIM, MAIN);
 				ToggleRibbonMenu(RIGHT_ANIM, CHANNEL_1);
 				menutype = CHANNEL_1;
 				if(!mDrawingPanel.getChannel1()){
@@ -193,7 +190,7 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
             	}
             	break;
 			case R.id.ribbon_menu_channel_2:
-				ToggleRibbonMenu(LEFT_ANIM);
+				ToggleRibbonMenu(LEFT_ANIM, MAIN);
 				ToggleRibbonMenu(RIGHT_ANIM, CHANNEL_2);
 				menutype = CHANNEL_2;
 				if(!mDrawingPanel.getChannel2()){
@@ -201,7 +198,7 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
             	}
 				break;
 			case R.id.ribbon_menu_math_channel:
-				ToggleRibbonMenu(LEFT_ANIM);
+				ToggleRibbonMenu(LEFT_ANIM, MAIN);
 				ToggleRibbonMenu(RIGHT_ANIM, MATH);
 				menutype = MATH;
 				if(!mDrawingPanel.getChannelMath()){
@@ -210,12 +207,12 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
             	}
 				break;
 			case R.id.ribbon_menu_trigger:
-				ToggleRibbonMenu(LEFT_ANIM);
+				ToggleRibbonMenu(LEFT_ANIM, MAIN);
 				ToggleRibbonMenu(RIGHT_ANIM, TRIGGER);
 				menutype = TRIGGER;
 				break;
 			case R.id.ribbon_menu_autoset:
-				ToggleRibbonMenu(LEFT_ANIM);
+				ToggleRibbonMenu(LEFT_ANIM, MAIN);
 				totalGraphShiftx = 0;
                 totalGraphShifty = 100;
                 totalGraphScale = 1;
@@ -303,7 +300,7 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
 				mDrawingPanel.setMathCalculationType(3);
 				break;				
 			case R.id.ribbon_menu_saveimage:
-				ToggleRibbonMenu(LEFT_ANIM);
+				ToggleRibbonMenu(LEFT_ANIM, MAIN);
 				mDrawingPanel.screenShot = true;
 				while(mDrawingPanel.screenShot);
 				String ourDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + "ScholaPics";
@@ -336,6 +333,10 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
 		    	          File[] vallFiles ;
 		    	                 File vfolder = new File(vourDir + "/");
 		    	                 vallFiles = vfolder.listFiles();
+		    	                 if (vallFiles.length == 0){
+		    	                	 Toast.makeText(context, "No Images have been saved", Toast.LENGTH_LONG).show();
+		    	                	 break;
+		    	                 }
 		    	                 Log.d("screenCap", "Opening: " + vallFiles[vallFiles.length - 1].getAbsolutePath());
 		    	                 new SingleMediaScanner(this, vallFiles[vallFiles.length - 1]);
 		    	                 break;
@@ -363,7 +364,7 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
 		
 	}    
  
-    /**Current implementation of the LongPress Context Menu. It is connected to the surface view**/
+    /**Current implementation of the LongPress Context Menu. It is connected to the surface view does nothing (long press is handled in drawing panel)**/
     
     @Override
 	public void onCreateContextMenu(ContextMenu menu, View v,
@@ -371,8 +372,6 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
     	super.onCreateContextMenu(menu, v, menuInfo);
     	Log.w(this.getClass().getName(), "onCreateContextMenu()");
    	
-	    //MenuInflater inflater = getMenuInflater();
-	    //inflater.inflate(R.menu.waveform, menu);
     	
     }
 
@@ -380,7 +379,6 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
     public void onPause(){
     	super.onPause();
     	Log.d("CanvasTester", "onPause");
-		//mDrawingThread.onPause();
     	//Stops thread if onpause is called
     	mDrawingThread.setRunning(false);
     }
@@ -397,10 +395,8 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
 	public void onResume(){
     	super.onResume();
     	Log.d("CanvasTester", "onResume");
-    		//mDrawingThread.setRunning(true);
-    		//mDrawingThread.run();
-    	//Resumes thread
-    	mDrawingThread.onResume();
+    	//Resumes Drawing Thread
+    	//mDrawingThread.onResume();
     		
     }
     
@@ -416,7 +412,6 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
  	public void onStop(){
      	super.onStop();
      	Log.d("CanvasTester", "onStop");
- 		//finish();	
      }
 
     @Override
@@ -427,82 +422,82 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
     
        @Override
         public void onBackPressed(){
-          //super.onBackPressed();
+    	   //Comment this out to disable back button
+    	   super.onBackPressed();
           Log.d("CanvasTester", "OnBackPressed");
         }
     
     //Callback functions to make the ribbon menus accessible from drawing panel
-	@Override
+/*	@Override
 	public void ToggleRibbonMenu(final int direction) {
-		// TODO Auto-generated method stub
-		Log.d("DrawingPanel", "ToggleRibbonMenu " + direction);
-		//rbmView.setMenuItems(R.menu.ribbon_menu, LEFT_ANIM);  
-        //rbmView.setMenuItems(R.menu.ribbon_menu_right_blank, RIGHT_ANIM);	
-		runOnUiThread(new Runnable() {
-
-	        public void run() {
+		Log.d("ToggleRibbonMenu", "Toggle " + direction);
+		//if (direction == RIGHT_ANIM){
+			Log.d("ToggleRibbonMenu", "Toggle Right anim");
+			runOnUiThread(new Runnable() {
+				public void run() {
 	            rbmView.toggleMenu(direction);
 	        }
 	    });
-	}    
-
-	public void ToggleRibbonMenu(final int direction, int channel) {
-		// TODO Auto-generated method stub
-		rbmView.setMenuItems(R.menu.ribbon_menu, LEFT_ANIM);  
-        if (channel == CHANNEL_1)
-        	rbmView.setMenuItems(R.menu.ribbon_menu_right_ch1, RIGHT_ANIM);	
-        else if (channel == CHANNEL_2)
-        	rbmView.setMenuItems(R.menu.ribbon_menu_right_ch2, RIGHT_ANIM);	
-        else if (channel == MATH)
-        	rbmView.setMenuItems(R.menu.ribbon_menu_right_math, RIGHT_ANIM);	
-        else if (channel == TRIGGER)
-        	rbmView.setMenuItems(R.menu.ribbon_menu_right_trigger, RIGHT_ANIM);	
-        else
-        	rbmView.setMenuItems(R.menu.ribbon_menu_right_blank, RIGHT_ANIM);	
-		runOnUiThread(new Runnable() {
-
-	        public void run() {
-	            rbmView.toggleMenu(direction);
-	        }
-	    });
-	} 
+//		} else if (direction == LEFT_ANIM) {
+//			Log.d("ToggleRibbonMenu", "Toggle left anim");
+//			runOnUiThread(new Runnable() {
+//				public void run() {
+//	            rbmView.toggleMenu(LEFT_ANIM);
+//	        }
+//	    });
+//		}
+	}    */
 	
-	@Override
-	public void ToggleRibbonWaveformMenu(int direction) {
-		// TODO Auto-generated method stub
-		//Sets up the waveform menus, these are made in the xml files
-		switch(direction){
-		case CHANNEL_1:
-			rbmView.setMenuItems(R.menu.ribbon_menu_waveform_1, WAVEFORM);
-			break;
-		case CHANNEL_2:
-	        rbmView.setMenuItems(R.menu.ribbon_menu_waveform_2, WAVEFORM);
-	        break;
-		default:
-			break;
-		}
-		rbmView.toggleMenu(RIGHT_ANIM);
-	}    
-	@Override
-	public void togglerightmenu() {
-		// TODO Auto-generated method stub
-		//rbmViewRight.toggleMenu();
-	}
-
+       @Override
+       public void ToggleRibbonMenu(final int direction, final int channel) {
+    	   runOnUiThread(new Runnable() {
+    		   public void run() {
+    			   if (!rbmView.isMenuVisible()){
+    				   switch (channel){
+    				   case CHANNEL_1:
+    					   rbmView.setMenuItems(R.menu.ribbon_menu_right_ch1, direction);
+    					   break;
+    				   case CHANNEL_2:
+    					   rbmView.setMenuItems(R.menu.ribbon_menu_right_ch2, direction);	
+    					   break;
+    				   case MATH:
+    					   rbmView.setMenuItems(R.menu.ribbon_menu_right_math, direction);	
+    					   break;
+    				   case TRIGGER:
+    					   rbmView.setMenuItems(R.menu.ribbon_menu_right_trigger, direction);	
+    					   break;
+    				   case MAIN:
+    					   rbmView.setMenuItems(R.menu.ribbon_menu, LEFT_ANIM);  
+    				   }
+    			   }
+    			   rbmView.toggleMenu(direction);
+    			   Log.d("ToggleRibbonMenu2", "Toggle right anim run done");
+    		   }
+    	   });
+       }
+		
 	public boolean onLongClick(SurfaceView v) {
 		// TODO Auto-generated method stub
 		Log.d("onLongClick", "Before openContextMenu");
 	    openContextMenu(v);
 	    return true;
 	}   	
-	
+	//Callback to toggle the status button when pausing the screen
 	@Override
 	public void ToggleStatusButton(boolean status) {
 		// TODO Auto-generated method stub
 		if(status){
-			statusButton.setImageResource(R.drawable.pause);
+			runOnUiThread(new Runnable() {
+				public void run() {
+					statusButton.setImageResource(R.drawable.pause);
+	        }
+	    });
 		}else{
-			statusButton.setImageResource(R.drawable.play);
+			runOnUiThread(new Runnable() {
+				public void run() {
+					statusButton.setImageResource(R.drawable.play);
+	        }
+	    });
 		}
 	}
 	
@@ -529,7 +524,6 @@ public class MainActivity extends Activity implements iRibbonMenuCallback, Ribbo
 	            Log.d("screenCap", "Starting activity");
 	            startActivityForResult(intent, 32);
 	            mMs.disconnect();
-	            //mDrawingThread.onResume();
 	        }
 
 

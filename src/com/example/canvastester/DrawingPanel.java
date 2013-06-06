@@ -15,20 +15,14 @@ import java.net.Socket;
 import java.nio.charset.Charset;
 import java.security.InvalidParameterException;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.StringTokenizer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.view.ContextMenu;
-import android.view.ContextMenu.ContextMenuInfo;
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -37,26 +31,15 @@ import android.graphics.DashPathEffect;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PointF;
-import android.media.MediaScannerConnection;
-import android.media.MediaScannerConnection.MediaScannerConnectionClient;
-import android.net.Uri;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.support.v4.view.GestureDetectorCompat;
-import android.text.format.DateFormat;
 import android.util.AttributeSet;
-import android.util.FloatMath;
 import android.util.Log;
-import android.view.Display;
 import android.view.GestureDetector;
-import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
-import android.widget.ImageButton;
-import android.widget.PopupMenu;
 import android.widget.Toast;
 
 enum ScreenItem { NONE, CH1, CH2, TRIGGER, MATH1 }
@@ -70,6 +53,9 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 	private final int RIGHT_ANIM = 2;
 	private final int CHANNEL_1 = 1;
 	private final int CHANNEL_2 = 2;	
+	private final int MATH = 3;	
+	private final int TRIGGER = 4;
+	private final int MAIN = 5;
 	
 	
 	private Texttospeech tts;
@@ -78,8 +64,8 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 	private GestureDetectorCompat mDetector;
 	private ScaleGestureDetector mScaleDetector;
 
-	private String serverIpAddress = "10.0.1.9";
-//	private String serverIpAddress = "192.168.0.2";
+//	private String serverIpAddress = "10.0.1.9";
+	private String serverIpAddress = "192.168.0.2";
 	Thread cThread = null;
 
 
@@ -155,6 +141,8 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 	PointF mid = new PointF();
 	float oldDist = 1f;
 
+	
+	//Setup to take screenshot
 	private Bitmap toDisk;
 	public boolean screenShot = false;
 	Context context;
@@ -470,13 +458,6 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 	}
 
 
-	//Not sure what this does, i dont think it is necessary any more
-	MainActivity theListener;
-	
-	public void setLongClickListener(MainActivity l) {
-        theListener = l;
-    }
-	
 	/** This section is for the overrides for the gesture listener */
 
 	@Override
@@ -501,9 +482,9 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 			float velocityX, float velocityY) {
 		Log.d(DEBUG_TAG, "onFling: " + event1.getX());
 		if (event1.getX() < 40)
-			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
+			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM, MAIN);
 		if (event1.getX() > 1180)
-			RibbonMenuCallbackClass.ToggleRibbonMenu(RIGHT_ANIM);
+			RibbonMenuCallbackClass.ToggleRibbonMenu(RIGHT_ANIM, MAIN);
 		return true;
 	}
 
@@ -529,7 +510,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 					Log.d(DEBUG_TAG, "Channel 1 Touch"); 
 					activeScreenItems = ScreenItem.CH1;
 					//channel1Active = false;
-					RibbonMenuCallbackClass.ToggleRibbonWaveformMenu(CHANNEL_1);
+					RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM, CHANNEL_1);
 					break;
 				}
 			}
@@ -543,7 +524,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 					Log.d(DEBUG_TAG, "Channel 2 Touch"); 
 					activeScreenItems = ScreenItem.CH2;
 					//channel2Active = false;
-					RibbonMenuCallbackClass.ToggleRibbonWaveformMenu(CHANNEL_2);
+					RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM, CHANNEL_2);
 					break;
 				}
 			}
@@ -588,7 +569,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 	@Override
 	public boolean onDoubleTap(MotionEvent event) {
 		Log.d(DEBUG_TAG, "onDoubleTap: ");
-		RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
+		RibbonMenuCallbackClass.ToggleRibbonMenu(RIGHT_ANIM, CHANNEL_1);
 		//RibbonMenuCallbackClass.ToggleRibbonMenu(RIGHT_ANIM);
 		return true;
 	}
@@ -638,31 +619,16 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-            
-             //Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-    
-             //String SCAN_PATH;
-             //File[] allFiles ;
-             //File folder = new File(ourDir + "/");
-             //allFiles = folder.listFiles();
-             //Log.d("screenCap", "Opening: " + allFiles[allFiles.length - 1].getAbsolutePath());
-             //new SingleMediaScanner(context, allFiles[0]);
-             
-             // tells your intent to get the contents
-          // opens the URI for your image directory on your sdcard
-          //intent.setType(ourDir); 
-          //((Activity) RibbonMenuCallbackClass).startActivityForResult(intent, 1);
-
-
-            
+               
 	}
 	
 	 
 
 	/** This section is for the overrides for the SurfaceView */
-//Creates a bitmap that onDraw can draw to and be saved
+
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+    	//Creates a bitmap that onDraw can draw to and be saved
         this.x_dim = w;
     	this.y_dim = h;
         toDisk = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
@@ -691,7 +657,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 		serviceButtons();
 		serviceEncoders();
 
-		//Send all draw commands to this canvas also
+		//Send all draw commands to this canvas also to save on screen cap bitmap
 		canvas.drawBitmap(toDisk, new Matrix(), new Paint());
 		canvas.setBitmap(toDisk);
 	
@@ -850,10 +816,7 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 	}
 
 	private void serviceButtons(){
-		final int CHANNEL_1 = 1;
-		final int CHANNEL_2 = 2;	
-		final int MATH = 3;	
-		final int TRIGGER = 4;
+
 		
 		try{
 			switchActions = thread.getSwitchActions();
@@ -867,33 +830,35 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 			setChannelMath(null, !(getChannelMath()));
 			switchActions.put("C", 0);
 		}  else if (switchActions.getInt("D") == 1){
-//			RibbonMenuCallbackClass.ToggleRibbonMenu(RIGHT_ANIM, TRIGGER);
+			RibbonMenuCallbackClass.ToggleRibbonMenu(RIGHT_ANIM, TRIGGER);
 			switchActions.put("D", 0);
 			Log.d("DrawingPanel", "Recvd D");
 		}  else if (switchActions.getInt("E") == 1){
-			setChannelMath(null, !(getChannelMath()));
+			//Start Stop Button
+			ButtonCallbackClass.ToggleStatusButton(!displayUpdating);
+			setDisplayUpdating(!displayUpdating);
 			switchActions.put("E", 0);
 			Log.d("DrawingPanel", "Recvd E");
 		}  else if (switchActions.getInt("F") == 1){
 			Log.d("DrawingPanel", "Recvd F");
-			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
+			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM, CHANNEL_1);
 			switchActions.put("F", 0);
 		} else if (switchActions.getInt("G") == 1){
 			Log.d("DrawingPanel", "Recvd G");
-			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
+			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM, MAIN);
 			switchActions.put("G", 0);
 		} else if (switchActions.getInt("H") == 1){
-			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
+			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM, MAIN);
 			switchActions.put("H", 0);
 		} else if (switchActions.getInt("I") == 1){
-			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
+			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM, MAIN);
 			switchActions.put("I", 0);
 		}  else if (switchActions.getInt("J") == 1){
-			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
+			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM, MAIN);
 			switchActions.put("J", 0);
 		} else if (switchActions.getInt("P") == 1){
 			Log.d("DrawingPanel", "Recvd P");
-			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM);
+			RibbonMenuCallbackClass.ToggleRibbonMenu(LEFT_ANIM, MAIN);
 			switchActions.put("P", 0);
 			updateLEDs();
 		}
@@ -969,14 +934,15 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 	}
 
 	
-//Im not sure why all this works, its the final product that works for me even though i confused the heck out of myself setting it up
+
 	public void surfaceCreated(SurfaceHolder holder) {
 		// TODO Auto-generated method stub
 		Log.d("test", "surfaceCreated");
 		if(_thread.getState() != Thread.State.NEW)
         {
+			//If the thread isn't new then create a new thread or else you will be stuck with an illegal thread state
+			//i.e. lunar lander example
 			_thread = new DrawingThread(getHolder(), this);
-			//Log.d("test", "before onresume");
             _thread.setRunning(true);
             _thread.start();
 
@@ -1004,7 +970,6 @@ GestureDetector.OnDoubleTapListener, ScaleGestureDetector.OnScaleGestureListener
 
 
 	/** This section is for the getter and setters */
-
 	public void setDisplayUpdating(boolean value){
 		thread.displayUpdating = value;
 		displayUpdating = value;

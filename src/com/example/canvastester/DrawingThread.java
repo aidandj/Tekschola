@@ -15,7 +15,6 @@ public class DrawingThread extends Thread {
 	private SurfaceHolder _surfaceHolder;
     private DrawingPanel _panel;
     private boolean _run = false;
-    public boolean isPaused = false;
 
     public DrawingThread(SurfaceHolder surfaceHolder, DrawingPanel panel) {
         _surfaceHolder = surfaceHolder;
@@ -54,8 +53,6 @@ public class DrawingThread extends Thread {
                 c = _surfaceHolder.lockCanvas(null);
                 synchronized (_surfaceHolder) {
                     _panel.onDraw(c);
-                    //c.drawBitmap(toDisk, new Matrix(), new Paint());
-            		//c.setBitmap(toDisk);
                 }
                 //dirtyness that threads have become for me. I'll attempt to break it down:
                 //Main activity gets a button press and sets _panel.screenShot to true.
@@ -69,9 +66,7 @@ public class DrawingThread extends Thread {
                 synchronized (mPauseLock) {
                     while (mPaused) {
                         try {
-                        	Log.d("ADJ", "before wait");
                             mPauseLock.wait();
-                            Log.d("ADJ", "after wait");
                         } catch (InterruptedException e) {
                         }
                     }
